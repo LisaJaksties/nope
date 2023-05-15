@@ -9,6 +9,7 @@ import io.socket.client.Ack
 import io.socket.emitter.Emitter
 import socket.*
 import org.json.JSONObject
+import view.GUIMain
 
 /*
  * Main
@@ -28,10 +29,11 @@ fun main() {
     //Login
     // TODO : catch a nullpointer if access token is null
     val token = restapi.userLogin()
-
+    // Create an instance of the StartMenu class
+    val menu = GUIMain()
     //Socket init
     if(token != null){
-        val mSocket = socketinit(serverURL, token)
+        val mSocket = socketinit(serverURL, token, menu)
         connect()
         restapi.connect(token)
 
@@ -41,27 +43,11 @@ fun main() {
 
 
     // MainWindow
-    val window = MainWindow()
+    //val window = MainWindow()
 
 
-    val gson = Gson()
     //val jsonTournamentCreate = gson.toJson(tc)
 
-    mSocket?.emit("tournament:create", 3, Ack { ackData ->
-        // Handle acknowledgement data or failure
-        if (ackData != null) {
-            val result = gson.toJson(ackData)
-            val lol = JSONObject.stringToValue(ackData.toString())
-            println(lol)
-            //val jsonMap = Gson().fromJson(result, Map::class.java)
-            println("Acknowledgement received - Success: ${result.toString()}")
-            //println(jsonMap["tournamentId"])
-
-        } else {
-            // Handle acknowledgement failure
-            println("Acknowledgement not received")
-        }
-    })
 
     // socket.on -> empfangen der events + json datein
     // je nach event wird andere socket.on ausgeführt (Listener)
@@ -76,7 +62,7 @@ fun main() {
     //}
 
     // Exit when the window is closed
-    window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+    //window.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
 
 
