@@ -2,31 +2,6 @@ package ai_player/*
  * AI Player code
  */
 
-fun makemove(){
-
-    // Json Objekt / oder Array ..keine Ahnung auflösen und in temporäre Variablen speichern
-    // val gameId : String
-    // val topCard : String
-    // val lastTopCard : String
-    // val drawPileSize : Int
-    // val palyerHandSize : Int
-    //val handCards: stringArrayOf()
-    // val handsize: Int
-    // val currentPlayer: String
-    // val prevPlayer: String
-    //val prevTurnCards: stringArrayOf()
-
-    // current player me? - check
-
-    // compare handCards with topCard (or if it is the see-through card : the lastTopCard) - can you return cards?
-    // val cardsetsToReturn: Array // two dimensional
-    // case 1 : payload is empty
-    // take a card or send nope
-
-    // case 2: payload is full
-    // analyse what is the best move
-}
-
 // fun analyseMove(topCard: String, lastTopCard: String, handCards: Array, prevTurnCards: Array, cardsetsToReturn: Array): Array{
 //     // 1. Strategy: do I have a colorful card -> return this one
 
@@ -102,7 +77,7 @@ class AILogic{
             // put one card or special card
             if(lastCard.value == 1){
                 for(card in colorMatchingCard){
-                    if( card.value == lastCard.value || card.type != Type.NUMBER ){
+                    if( card.type == Type.NUMBER ){
                         var tempCards = ArrayList<Card>()
                         tempCards.add(card)
                         matchingCardCollocations.add(tempCards)
@@ -151,8 +126,8 @@ class AILogic{
             }
 
         }else{
-            // Joker as topcard
-            if(lastCard.type == Type.JOKER){
+            // Joker as topcard or  Reboot as topcard
+            if(lastCard.type == Type.JOKER || lastCard.type == Type.REBOOT){
                 for (card in handCards){
                     var tempCards = ArrayList<Card>()
                     tempCards.add(card)
@@ -177,12 +152,6 @@ class AILogic{
                     val cardS = Card(Type.NUMBER, lastCard.selectedColor!!,lastCard.selectValue!!, null, null, null )
                     matchingCardCollocations = findMatchingCards(handCards, preLastCard!!, null)
                 }
-
-
-            }
-            // Reboot as topcard
-            if(lastCard.type == Type.REBOOT){
-
             }
         }
 

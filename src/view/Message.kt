@@ -17,7 +17,7 @@ fun showMessage(fr: JFrame, content: String, time: Int) {
 
     val panel = JPanel()
     panel.layout = BorderLayout()
-    panel.background = Color(229, 226, 248)
+    panel.background = Color(234, 226, 211)
 
     val iconImage = ImageIcon("bin/info2.png").image
     val scaledIcon = ImageIcon(iconImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH))

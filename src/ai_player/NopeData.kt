@@ -23,7 +23,8 @@ data class Tournament(
 data class Player(
     var id: String?,
     var username: String?,
-    var score: Int?
+    var score: Int?,
+    var handcards: Int?
 
 )
 data class MatchInvitation(

@@ -17,16 +17,23 @@ class GUIMain : JFrame("Nope Card Game") {
     private var tournamentCreator = false
 
     private val menuPanel = JPanel()
-    private val scorePanel = JPanel()
-    private val crTournamentPanel = JPanel()
-    private val tournamentListPanel = JPanel()
-    private val tournamentLobbyPanel = JPanel()
+    private val createTournPanel = JPanel()
+    private val showTournPanel = JPanel()
+    private val waitingRoomPanel = JPanel()
+    private val gamePanel = JPanel()
 
+    private var gameHeader = JTextArea()
+    private var gameCard = JButton()
+    private var gamePile = JLabel()
+    private var gameMyMove = JTextArea()
+    private var gameOpponent = JTextArea()
+
+    private var waitingRoomBoard = JTextArea(20,20)
     private val cardLayout = CardLayout()
 
     init {
         defaultCloseOperation = EXIT_ON_CLOSE
-        setSize(1080, 720)
+        setSize(1200, 1000)
 
         val img = ImageIcon("bin/cover.png")
         setIconImage(img.getImage())
@@ -36,26 +43,31 @@ class GUIMain : JFrame("Nope Card Game") {
 
         // Create a JPanel to hold the menu items
         menuPanel.layout = BoxLayout(menuPanel, BoxLayout.Y_AXIS)
-        menuPanel.setBackground(Color(198, 226, 255))
+        menuPanel.setBackground(Color(242, 242, 242))
 
         // Create a JLabel for the title
         val titleLabel = JLabel("Nope!™")
+
+
+        val icon = ImageIcon("bin/icon.jpg")
+        val titleIcon = JLabel()
+        titleIcon.icon = icon
+        titleIcon.alignmentX = CENTER_ALIGNMENT
+
         titleLabel.alignmentX = CENTER_ALIGNMENT
         titleLabel.font = titleLabel.font.deriveFont(24f)
-        menuPanel.add(titleLabel)
-        val subtitleLabel = JLabel("\n\n\n")
-        subtitleLabel.font = titleLabel.font.deriveFont(16f)
-        menuPanel.add(subtitleLabel)
+
+        menuPanel.add(titleIcon)
+
         menuPanel.add(Box.createRigidArea(Dimension(0,20)))
         // Create a JButton for each menu item
         val items = listOf("Create Tournament", "Join Tournament")
         for (item in items) {
             val button = JButton(item)
             button.alignmentX = CENTER_ALIGNMENT
-            button.preferredSize = Dimension(400,120)
-            button.maximumSize = Dimension(800, 120)
+            button.maximumSize = Dimension(600, 80)
             button.setForeground(Color.BLACK)                    // Vordergrundfarbe auf "rot" setzen
-            button.background = Color(190,190,190) // Hintergrundfarbe auf "weiß" setzen
+            button.background = Color(154,199,220) // Hintergrundfarbe auf "weiß" setzen
             button.isBorderPainted = false
 
             if(item == "Create Tournament"){
@@ -74,15 +86,15 @@ class GUIMain : JFrame("Nope Card Game") {
                 }
             }
             menuPanel.add(button)
-            menuPanel.add(Box.createRigidArea(Dimension(0,40)))
+            menuPanel.add(Box.createRigidArea(Dimension(0,60)))
 
         }
 
         // Create a JButton to exit the application
         val exitButton = JButton("Exit")
         exitButton.alignmentX = CENTER_ALIGNMENT
-        exitButton.background = Color(190,190,190)
-        exitButton.maximumSize = Dimension(800, 120)
+        exitButton.background = Color(154,199,220)
+        exitButton.maximumSize = Dimension(600, 80)
         exitButton.addActionListener {
             dispose()
         }
@@ -90,44 +102,116 @@ class GUIMain : JFrame("Nope Card Game") {
 
 
 
-        // Create a JPanel to hold the score table
-        scorePanel.layout = BorderLayout()
-
-        // Create a JTable for the score list
-        scoreTable.model = DefaultTableModel(arrayOf("Name", "Score"), 0)
-        scoreTable.fillsViewportHeight = true
-
-        // Create a JScrollPane for the score table
-        val scoreScrollPane = JScrollPane(scoreTable)
-        scorePanel.add(scoreScrollPane, BorderLayout.CENTER)
-
-        // Create a JButton to return to the menu
-        val returnButton = JButton("Return")
-        returnButton.addActionListener {
-            cardLayout.show(contentPane, "menu")
-        }
-        scorePanel.add(returnButton, BorderLayout.SOUTH)
-
-
         initTournamentPanel()
 
         initTournamentListPanel()
 
-        initTournamentLobbyPanel()
+        initWaitingRoomPanel()
+
+        initGamePanel()
 
         // Add the menu and score panels to the frame
         contentPane.layout = cardLayout
         contentPane.add(menuPanel, "menu")
-        contentPane.add(scorePanel, "scores")
-        contentPane.add(crTournamentPanel, "Create a new Tournament")
-        contentPane.add(tournamentListPanel, "tournamentLobby")
-        contentPane.add(tournamentLobbyPanel, "game lobby")
+        contentPane.add(createTournPanel, "Create a new Tournament")
+        contentPane.add(showTournPanel, "tournamentLobby")
+        contentPane.add(waitingRoomPanel, "game lobby")
+        contentPane.add(gamePanel, "game")
 
     }
 
-    private fun initTournamentLobbyPanel(){
-        tournamentLobbyPanel.layout = BorderLayout()
+    private fun initGamePanel(){
 
+        gamePanel.layout= BorderLayout()
+        gamePanel.maximumSize = Dimension(1200, 1000)
+        val gameBorder = JPanel()
+        gameBorder.layout = GridBagLayout()
+
+
+        gameBorder.background = Color(242, 242, 242)
+
+        val gbc = GridBagConstraints()
+        gbc.fill = GridBagConstraints.BOTH
+
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.gridwidth = 5
+
+        gameHeader.background = Color(234, 226, 211)
+        gameHeader.font = Font("Arial", Font.BOLD, 14)
+        gameHeader.text = "Game Menu "
+        gameHeader.maximumSize = Dimension(700, 100)
+        gameBorder.add(gameHeader, gbc)
+
+        gbc.gridx = 2
+        gbc.gridy = 1
+        gbc.gridwidth = 1
+
+
+        gameCard.font = Font("Arial", Font.BOLD, 25)
+        gameCard.background = Color(242, 242, 242)
+        gameBorder.add(gameCard, gbc)
+        gameCard.maximumSize = Dimension(140, 180)
+
+        gbc.gridx = 2
+        gbc.gridy = 2
+        gbc.gridwidth = 1
+
+        gamePile.font = Font("Arial", Font.BOLD, 25)
+        gamePile.background = Color(242, 242, 242)
+        gameBorder.add(gamePile, gbc)
+        gamePile.maximumSize = Dimension(140, 10)
+        gamePile.text = "size: 44"
+
+        gbc.gridx = 0
+        gbc.gridy = 3
+        gbc.gridwidth = 3
+
+        gameMyMove.font = Font("Arial", Font.BOLD, 25)
+        gameMyMove.background = Color(132, 204, 204)
+        gameBorder.add(gameMyMove, gbc)
+        gameMyMove.maximumSize = Dimension(400, 200)
+
+        gbc.gridx = 3
+        gbc.gridy = 3
+        gbc.gridwidth = 2
+
+        gameOpponent.font = Font("Arial", Font.BOLD, 25)
+        gameOpponent.background = Color(132, 204, 204)
+        gameBorder.add(gameOpponent, gbc)
+        gameOpponent.maximumSize = Dimension(260, 200)
+
+        updateGameMenu()
+        gamePanel.add(gameBorder,BorderLayout.CENTER)
+    }
+
+    public fun updateGameMenu(){
+        gameHeader.text = ""
+        gameHeader.append("Nope Card Game \n")
+        gameHeader.append("Player1:  ${currentGame.players?.get(0)?.username} \n")
+        gameHeader.append("Player2:  ${currentGame.players?.get(1)?.username} \n")
+        gameHeader.append("Round:  ${currentMatch.round} \n")
+        gameHeader.append(" ${currentMatch.opponents?.get(0)?.score} :  ${currentMatch.opponents?.get(1)?.score}")
+        gameHeader.font = Font("Arial", Font.BOLD, 25)
+
+        gameCard.text = "Card: ${currentGame.topCard?.type} ${currentGame.topCard?.color} ${currentGame.topCard?.value}"
+        gameCard.icon = ImageIcon("bin/icon.jpg")
+
+        gameMyMove.text = ""
+        gameMyMove.append("My Hand: \n")
+        gameMyMove.append("cards: \n")
+
+        for(i in 0 until (currentGame.hand?.size?:0)){
+
+            gameMyMove.append("Card ${i+1}: ${currentGame.hand?.get(i)?.getType()?:""}  ${currentGame.hand?.get(i)?.getColor()?:""}  ${currentGame.hand?.get(i)?.value?:""}  ${currentGame.hand?.get(i)?.selectValue?:""}  ${currentGame.hand?.get(i)?.selectedColor?:""}\n")
+        }
+
+        gameOpponent.text = ""
+        gameOpponent.append("Number of Cards on Hand: ${currentGame.players?.get(1)?.handcards} \n")
+    }
+
+    private fun initWaitingRoomPanel(){
+        waitingRoomPanel.layout = BorderLayout()
 
         // divide main Panel into two by adding a new panel
         val tempPanel = JPanel()
@@ -187,40 +271,16 @@ class GUIMain : JFrame("Nope Card Game") {
             }
         }
 
+        val messageBoard = JScrollPane(waitingRoomBoard)
+        waitingRoomPanel.add(messageBoard, BorderLayout.CENTER)
+        waitingRoomBoard.append("Here is the info then...")
         tempPanel.add(leaveTournament, BorderLayout.WEST)
         tempPanel.add(startTournament, BorderLayout.EAST)
-
-
-
-
-
-        currentTournamentTable.model =
-            DefaultTableModel(arrayOf("ID", "Current Size", "Date", "status", "Players","BestOf"), 0)
-        currentTournamentTable.fillsViewportHeight = true
-        currentTournamentTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
-        currentTournamentTable.rowSelectionAllowed = true
-        currentTournamentTable.columnSelectionAllowed = false
-        currentTournamentTable.font = Font("Arial", Font.ITALIC, 16)
-        currentTournamentTable.gridColor = Color(190,190,190)
-
-
-
-        val scrollPane = JScrollPane(currentTournamentTable)
-        scrollPane.background = Color(198, 226, 255)
-        scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        tournamentLobbyPanel.add(scrollPane, BorderLayout.CENTER)
-
-
-
-
-
-        //tournamentLobbyPanel.add(gameInfo, BorderLayout.CENTER)
-        tournamentLobbyPanel.add(tempPanel, BorderLayout.SOUTH)
-
+        waitingRoomPanel.add(tempPanel, BorderLayout.SOUTH)
 
     }
     private fun initTournamentListPanel() {
-        tournamentListPanel.layout = BorderLayout()
+        showTournPanel.layout = BorderLayout()
         // Create a JButton to return to the menu
         val returnButton3 = JButton("leave Room")
         returnButton3.font = Font("Arial", Font.BOLD, 14)
@@ -247,7 +307,7 @@ class GUIMain : JFrame("Nope Card Game") {
         val scrollPane = JScrollPane(tournamentTable)
         scrollPane.background = Color(198, 226, 255)
         scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        tournamentListPanel.add(scrollPane, BorderLayout.CENTER)
+        showTournPanel.add(scrollPane, BorderLayout.CENTER)
 
         val joinTournament = JButton("Join Tournament")
         joinTournament.font = Font("Arial", Font.BOLD, 14)
@@ -283,15 +343,15 @@ class GUIMain : JFrame("Nope Card Game") {
         }
 
 
-        tournamentListPanel.add(returnButton3, BorderLayout.NORTH)
-        tournamentListPanel.add(joinTournament, BorderLayout.SOUTH)
+        showTournPanel.add(returnButton3, BorderLayout.NORTH)
+        showTournPanel.add(joinTournament, BorderLayout.SOUTH)
 
 
 
     }
     private fun initTournamentPanel() {
-        crTournamentPanel.layout = BorderLayout()
-        crTournamentPanel.background = Color(198, 226, 255)
+        createTournPanel.layout = BorderLayout()
+        createTournPanel.background = Color(198, 226, 255)
 
 
         // Create a JButton to create a Tournament
@@ -374,9 +434,9 @@ class GUIMain : JFrame("Nope Card Game") {
 //        crTournamentPanel.add(label, BorderLayout.LINE_START)
 //        crTournamentPanel.add(tfName, BorderLayout.CENTER)
 
-        crTournamentPanel.add(createButton, BorderLayout.SOUTH)
-        crTournamentPanel.add(returnButton2, BorderLayout.NORTH)
-        crTournamentPanel.add(centerPanel, BorderLayout.CENTER)
+        createTournPanel.add(createButton, BorderLayout.SOUTH)
+        createTournPanel.add(returnButton2, BorderLayout.NORTH)
+        createTournPanel.add(centerPanel, BorderLayout.CENTER)
     }
     /*    private fun updateScoreTable() {
             val jsonString = """
