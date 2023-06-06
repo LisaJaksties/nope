@@ -60,6 +60,7 @@ class AILogic{
         var cardMatches = false
         var matchingCardCollocations =  ArrayList<ArrayList<Card>>()
 
+
         if(lastCard.type == Type.NUMBER){
 
             var colorMatchingCard = ArrayList<Card>()
@@ -67,17 +68,29 @@ class AILogic{
             // check Colors and save cards that match
             for (card in handCards){
                 val currentCardColor = card.color.color
+
                 // case 1 same color card              case 2  hand card consisting of two colors  case 3 top card consisting of two colors   case 4 hand card is multi card    case 5: both two colored values -> check for similarity and compare it with last card
-                if(inputColor == currentCardColor || inputColor in currentCardColor || currentCardColor in inputColor || currentCardColor == Color.MULTI.color|| checkDoubleValuesForeEquality(card,lastCard,lastCard).color in lastCard.color.color){
+                if(inputColor == currentCardColor || inputColor in currentCardColor || currentCardColor in inputColor || currentCardColor == Color.MULTI.color|| checkDoubleValuesForeEquality(card,lastCard,lastCard).color in lastCard.color.color  ){
                     colorMatchingCard.add(card)
 
                 }
             }
 
+            //special cards are added to matchingCardCollocations
+            for(card in colorMatchingCard){
+                if( card.type == Type.SEE_THROUGH || card.type == Type.REBOOT || card.type == Type.SELECTION ){
+                    var tempCards = ArrayList<Card>()
+                    tempCards.add(card)
+                    matchingCardCollocations.add(tempCards)
+                }
+
+            }
+                // put two cards with same color
+
             // put one card or special card
             if(lastCard.value == 1){
                 for(card in colorMatchingCard){
-                    if( card.type == Type.NUMBER ){
+                    if( card.type == Type.NUMBER || card.type == Type.JOKER){
                         var tempCards = ArrayList<Card>()
                         tempCards.add(card)
                         matchingCardCollocations.add(tempCards)
