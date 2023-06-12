@@ -8,22 +8,34 @@ import io.socket.emitter.Emitter
 import io.socket.client.Ack
 import com.google.gson.Gson
 import org.json.JSONArray
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.util.Collections.singletonMap
 import javax.swing.SwingUtilities
-import org.json.JSONObject;
+import org.json.JSONObject
 import com.google.gson.*
-import view.GUIMain
+import view.GUIgame
 
-/*
+/**
+ * Socket IO : connect & disconnect
+ *  receive in Game / Tournament information with these methods:
+ *  getCurrentTournaments()
+ *  getPlayerInfo()
+ *  getTournamentInfo()
+ *  receiveMatchInvitation()
+ *  getMatchInfo()
+ *  AiPlayerMakeMove()
+ *  getGameState()
+ *  getGameStatus()
  *
- *  game relevant data
+ *  send information during the game:
+ *  createTournament()
+ *  joinTournament()
+ *  leaveTournament()
+ *  startTournament()
+ *
  */
 
-// Create an empty ArrayList
 var tournamentList = ArrayList<Tournament>()
 
 var currentTournament = Tournament(null,null,null,null,null,null, null, null,null)
@@ -34,20 +46,16 @@ var currentGame = GameState(null,null,null,null,null,null,null,null,null,null,nu
 
 var aiPlayer = AILogic()
 
-/*
- * Socket code
- */
-
 
 var mSocket : Socket? = null
-var guiObject: GUIMain? = null
-var emitter = Emitter.Listener {}
+var guiObject: GUIgame? = null
 val gson = Gson()
+var user = ""
 
 
-fun socketinit(serverURL:String, access_token: Accesstoken, gui:GUIMain): Socket?{
+fun socketinit(serverURL:String, access_token: Accesstoken, gui:GUIgame, username:String): Socket?{
 
-
+    user = username
     var token = access_token
     val gson = Gson()
     val tokenjwt = gson.toJson(token)
@@ -78,7 +86,7 @@ fun connect() {
     getTournamentInfo()
     receiveMatchInvitation()
     getMatchInfo()
-    receiveNoticeForMakeAMove()
+    AiPlayerMakeMove()
     getGameState()
     getGameStatus()
 }
@@ -86,7 +94,9 @@ fun disconnect() {
     mSocket!!.disconnect()
 }
 
-
+/**
+ * host sends a number of best of matches to start a Tournament
+ */
 fun createTournament(number: Int): TournamentInfo {
 
     val tournamentInfo = TournamentInfo(null,null,null,false,null)
@@ -140,7 +150,9 @@ fun createTournament(number: Int): TournamentInfo {
     return tournamentInfo
 }
 
-
+/**
+ * receive all created Tournaments with infos about players, status..
+ */
 fun getCurrentTournaments() {
 
     mSocket?.off("list:tournaments")
@@ -179,7 +191,7 @@ fun getCurrentTournaments() {
             //println("Received tournaments: ${result.toString()} \n")
             SwingUtilities.invokeLater {
                 // update GUI components here
-                guiObject?.updateTournamentList()
+                guiObject?.updateTournamentLobby()
             }
 
         } else {
@@ -188,7 +200,10 @@ fun getCurrentTournaments() {
     })
 }
 
-
+/**
+ * receive infos after joining a tournament
+ * when a player joins or leaves the tournament- waitingroom
+ */
 fun getPlayerInfo() {
     mSocket?.off("tournament:playerInfo")
     mSocket?.on("tournament:playerInfo", Emitter.Listener { args ->
@@ -215,7 +230,7 @@ fun getPlayerInfo() {
             println("Received Tournament Data: ID: ${currentTournament.id} Message: ${currentTournament.message} Players: ${currentTournament.players} Best of: ${currentTournament.bestOf} Current Size: ${currentTournament.currentSize}")
             SwingUtilities.invokeLater {
                 // update GUI components here
-                guiObject?.updateCurrentTournamentList()
+                guiObject?.updateWaitingRoom()
             }
         } else {
             println("No Player Data received")
@@ -223,6 +238,9 @@ fun getPlayerInfo() {
     })
 }
 
+/**
+ * receive infos after joining a tournament - waitingroom
+ */
 fun getTournamentInfo() {
     mSocket?.off("tournament:info")
     mSocket?.on("tournament:info", Emitter.Listener { args ->
@@ -259,7 +277,7 @@ fun getTournamentInfo() {
             println("Received Tournament info: ${result.toString()} \n")
             SwingUtilities.invokeLater {
                 // update GUI components here
-                guiObject?.updateCurrentTournamentList()
+                guiObject?.updateWaitingRoom()
             }
         } else {
             println("No Tournament Data received")
@@ -267,7 +285,9 @@ fun getTournamentInfo() {
     })
 }
 
-
+/**
+ * player sends id of tournament that he wants to join
+ */
 fun joinTournament(id:String): TournamentInfo{
     val tournamentInfo = TournamentInfo(null,null,null,false,null)
     mSocket?.emit("tournament:join", id, Ack { ackData ->
@@ -283,18 +303,6 @@ fun joinTournament(id:String): TournamentInfo{
             if(success){
 
                 tournamentInfo.error = error
-                // get tournament data
-//                val getTournamentData = jsonArray.getJSONObject(0).getJSONObject("map").getJSONObject("data").getJSONObject("map")
-//                val tournamentId = getTournamentData.getString("tournamentId")
-//                val currentSize = getTournamentData.getInt("currentSize")
-//                val bestOf = getTournamentData.getInt("bestOf")
-
-
-//                //if (tournamentInfo.tournamentId != null) {
-//                    //println("Tournament created with ID: ${tournamentInfo.tournamentId}, current size: ${tournamentInfo.currentSize}, best of: ${tournamentInfo.bestOf}")
-//                }else {
-//                println("Error: tournament data is missing or incomplete")
-//                }
             }else{
                 val errorMessage = getTournamentInfo.getJSONObject("error").getJSONObject("map").getString("message")
                 tournamentInfo.error = errorMessage
@@ -312,6 +320,9 @@ fun joinTournament(id:String): TournamentInfo{
 
 }
 
+/**
+ * if player wants to leave a tournament
+ */
 fun leaveTournament():TournamentInfo{
     val tournamentInfo = TournamentInfo(null,null,null,false,null)
     mSocket?.emit("tournament:leave",  Ack { ackData ->
@@ -327,18 +338,6 @@ fun leaveTournament():TournamentInfo{
             if(success){
 
                 tournamentInfo.error = error
-                // get tournament data
-//                val getTournamentData = jsonArray.getJSONObject(0).getJSONObject("map").getJSONObject("data").getJSONObject("map")
-//                val tournamentId = getTournamentData.getString("tournamentId")
-//                val currentSize = getTournamentData.getInt("currentSize")
-//                val bestOf = getTournamentData.getInt("bestOf")
-
-
-//                //if (tournamentInfo.tournamentId != null) {
-//                    //println("Tournament created with ID: ${tournamentInfo.tournamentId}, current size: ${tournamentInfo.currentSize}, best of: ${tournamentInfo.bestOf}")
-//                }else {
-//                println("Error: tournament data is missing or incomplete")
-//                }
             }else{
                 val errorMessage = getTournamentInfo.getJSONObject("error").getJSONObject("map").getString("message")
                 tournamentInfo.error = errorMessage
@@ -355,6 +354,9 @@ fun leaveTournament():TournamentInfo{
     return tournamentInfo
 }
 
+/**
+ * host sends tournament start to start the Tournament
+ */
 fun startTournament(): TournamentInfo {
     val tournamentInfo = TournamentInfo(null,null,null,false,null)
     mSocket?.emit("tournament:start",  Ack { ackData ->
@@ -370,18 +372,6 @@ fun startTournament(): TournamentInfo {
             if(success){
 
                 tournamentInfo.error = error
-                // get tournament data
-//                val getTournamentData = jsonArray.getJSONObject(0).getJSONObject("map").getJSONObject("data").getJSONObject("map")
-//                val tournamentId = getTournamentData.getString("tournamentId")
-//                val currentSize = getTournamentData.getInt("currentSize")
-//                val bestOf = getTournamentData.getInt("bestOf")
-
-
-//                //if (tournamentInfo.tournamentId != null) {
-//                    //println("Tournament created with ID: ${tournamentInfo.tournamentId}, current size: ${tournamentInfo.currentSize}, best of: ${tournamentInfo.bestOf}")
-//                }else {
-//                println("Error: tournament data is missing or incomplete")
-//                }
             }else{
                 val errorMessage = getTournamentInfo.getJSONObject("error").getJSONObject("map").getString("message")
                 tournamentInfo.error = errorMessage
@@ -446,6 +436,9 @@ fun receiveMatchInvitation() {
     })
 }
 
+/**
+ * receive new round scores
+ */
 fun getMatchInfo() {
     mSocket?.off("match:info")
     mSocket?.on("match:info", Emitter.Listener { args ->
@@ -462,7 +455,6 @@ fun getMatchInfo() {
             val bestOf = matchObj.getInt("bestOf")
             val status = matchObj.getString("status")
             val opponentsArray = matchObj.getJSONObject("opponents").getJSONArray("myArrayList")
-            val opponents = ArrayList<Player>()
 
             val opponentList = opponentsArray?.let {
                 val opponents = ArrayList<Player>()
@@ -484,17 +476,20 @@ fun getMatchInfo() {
             val match = Match(message, tournamentId, id, round, bestOf, status, opponentList, winner)
             currentMatch = match
             println("Received Match Info: ID: ${currentMatch.id} Message: ${currentMatch.message} Opponents: ${currentMatch.opponents} Best of: ${currentMatch.bestOf} Round: ${currentMatch.round} Status: ${currentMatch.status} Winner: ${currentMatch.winner}")
-//            SwingUtilities.invokeLater {
-//                // update GUI components here
-//                guiObject?.updateCurrentMatchInfo()
-//            }
+            SwingUtilities.invokeLater {
+                // update GUI components here
+                guiObject?.updateGameMenu(user)
+            }
         } else {
             println("No Match Data received")
         }
     })
 }
 
-fun receiveNoticeForMakeAMove() {
+/**
+ * receive infos for the ai players move and return the move in acknowledge
+ */
+fun AiPlayerMakeMove() {
     mSocket?.off("game:makeMove")
     mSocket?.on("game:makeMove", Emitter.Listener { args ->
 
@@ -543,7 +538,7 @@ fun receiveNoticeForMakeAMove() {
                 })
                 .create()
 
-            val replyMove = aiPlayer.makeMove(currentGame)
+            val replyMove = aiPlayer.makeMove(currentGame, user)
             val replyMoveJSONString = gsonSpecial.toJson(replyMove)
             val myMove = JSONObject(replyMoveJSONString)
             //val replyMoveJSONObject = JSONObject(replyMoveJSONString)
@@ -555,12 +550,20 @@ fun receiveNoticeForMakeAMove() {
             if (args.size > 1 && args[1] is Ack) {
                 (args[1] as Ack).call(myMove)
             }
+            SwingUtilities.invokeLater {
+                // update GUI components here
+                guiObject?.updateMyMove(replyMove)
+            }
 
         } else {
             println("No Notice For Make A Move received")
         }
     })
 }
+
+/**
+ * receive information for the gameplay
+ */
 fun getGameState() {
     mSocket?.off("game:state")
     mSocket?.on("game:state", Emitter.Listener { args ->
@@ -577,11 +580,17 @@ fun getGameState() {
             val type = Type.fromTypeString(currCardType)
             val currCardColor = topCardObject.getString("color")
             val color = Color.fromTypeString(currCardColor)
+            val currCardValue: Int? = topCardObject?.let {
+                when (val value = it.get("value")) {
+                    is Int -> value
+                    is String -> value.toIntOrNull()
+                    else -> null
+                }
+            }
             val topCard = Card(
                 type!!,
                 color!!,
-                topCardObject.getInt("value"),null,null,null
-
+                currCardValue,null,null,null
             )
             val lastTopCardObject = gameStateObject.optJSONObject("lastTopCard")?.optJSONObject("map")
             val lastTopCard = lastTopCardObject?.let {
@@ -589,7 +598,15 @@ fun getGameState() {
                 val type = Type.fromTypeString(currCardType)
                 val currCardColor = it.getString("color")
                 val color = Color.fromTypeString(currCardColor)
-                Card(type!!,color!! , it.getInt("value"),null,null,null)
+                // get Value of card (can be either a number or null)
+                val currCardValue: Int? = it?.let {
+                    when (val value = it.get("value")) {
+                        is Int -> value
+                        is String -> value.toIntOrNull()
+                        else -> null
+                    }
+                }
+                Card(type!!,color!! , currCardValue,null,null,null)
             }
             val drawPileSize = gameStateObject.getInt("drawPileSize")
             val handSize = gameStateObject.getInt("handSize")
@@ -616,13 +633,23 @@ fun getGameState() {
                     val type = Type.fromTypeString(currCardType)
                     val currCardColor = cardObject.getString("color")
                     val color = Color.fromTypeString(currCardColor)
+                    // get Value of card (can be either a number or null)
+                    val currCardValue: Int? = cardObject?.let {
+                        when (val value = cardObject.get("value")) {
+                            is Int -> value
+                            is String -> value.toIntOrNull()
+                            else -> null
+                        }
+                    }
+
                     cards.add(Card(
                         type!!,
                         color!!,
-                        cardObject.getInt("value"),null,null,null
+                        currCardValue,null,null,null
                     ))
                 }
                 cards
+
             }
 
             val playersArray = gameStateObject.getJSONObject("players").getJSONArray("myArrayList")
@@ -643,10 +670,19 @@ fun getGameState() {
                 val type = Type.fromTypeString(currCardType)
                 val currCardColor = cardObject.getString("color")
                 val color = Color.fromTypeString(currCardColor)
+                // get Value of card (can be either a number or null)
+                val currCardValue: Int? = cardObject?.let {
+                    when (val value = it.get("value")) {
+                        is Int -> value
+                        is String -> value.toIntOrNull()
+                        else -> null
+                    }
+                }
+
                 hand.add(Card(
                     type!!,
                     color!!,
-                    cardObject.getInt("value"),null,null,null
+                    currCardValue,null,null,null
                 ))
             }
 
@@ -659,8 +695,17 @@ fun getGameState() {
                     val colorCard = Color.fromTypeString(color)
                     val type = card1Object.getString("type")
                     val typeCard = Type.fromTypeString(type)
-                    val value = card1Object.getInt("value")
-                    Card(typeCard!!,colorCard!!,value,null,null,null)
+
+                    // get Value of card (can be either a number or null)
+                    val currCardValue: Int? = card1Object?.let {
+                        when (val value = card1Object.get("value")) {
+                            is Int -> value
+                            is String -> value.toIntOrNull()
+                            else -> null
+                        }
+                    }
+
+                    Card(typeCard!!,colorCard!!,currCardValue,null,null,null)
                 }
                 var card2Object = it.optJSONObject("card2").optJSONObject("map")
                 val card2 = card2Object?.let{
@@ -668,8 +713,17 @@ fun getGameState() {
                     val colorCard = Color.fromTypeString(color)
                     val type = card2Object.getString("type")
                     val typeCard = Type.fromTypeString(type)
-                    val value = card2Object.getInt("value")
-                    Card(typeCard!!,colorCard!!,value,null,null,null)
+
+                    // get Value of card (can be either a number or null)
+                    val currCardValue: Int? = card2Object?.let {
+                        when (val value = card2Object.get("value")) {
+                            is Int -> value
+                            is String -> value.toIntOrNull()
+                            else -> null
+                        }
+                    }
+
+                    Card(typeCard!!,colorCard!!,currCardValue,null,null,null)
                 }
                 var card3Object = it.optJSONObject("card3").optJSONObject("map")
                 val card3 = card3Object?.let{
@@ -677,8 +731,16 @@ fun getGameState() {
                     val colorCard = Color.fromTypeString(color)
                     val type = card3Object.getString("type")
                     val typeCard = Type.fromTypeString(type)
-                    val value = card3Object.getInt("value")
-                    Card(typeCard!!,colorCard!!,value,null,null,null)
+
+                    // get Value of card (can be either a number or null)
+                    val currCardValue: Int? = card3Object?.let {
+                        when (val value = card3Object.get("value")) {
+                            is Int -> value
+                            is String -> value.toIntOrNull()
+                            else -> null
+                        }
+                    }
+                    Card(typeCard!!,colorCard!!,currCardValue,null,null,null)
                 }
 
                 val type = it.getString("type")
@@ -692,7 +754,7 @@ fun getGameState() {
                 secondTurn = true
             }
 
-            currentGame = GameState(matchId,gameId,topCard,lastTopCard,drawPileSize,players,hand,handSize,currentPlayer,currentPlayerIdx,prevPlayer,prevPlayerIdx,prevTurnCards, null,secondTurn,null,null
+            currentGame = GameState(matchId,gameId,topCard,lastTopCard,drawPileSize,players,hand,handSize,currentPlayer,currentPlayerIdx,prevPlayer,prevPlayerIdx,prevTurnCards, lastMove,secondTurn,null,null
 
             )
             println("This is my current game: $currentGame")
@@ -703,13 +765,17 @@ fun getGameState() {
             }
             SwingUtilities.invokeLater {
                 // update GUI components here
-                guiObject?.updateGameMenu()
+                guiObject?.updateGameMenu(user)
             }
         } else {
             println("No Game State received")
         }
     })
 }
+
+/**
+ * receive messages during the gameplay
+ */
 fun getGameStatus() {
     mSocket?.off("game:status")
     mSocket?.on("game:status", Emitter.Listener { args ->
@@ -732,8 +798,8 @@ fun getGameStatus() {
 
             println("Received Game Status: ${result.toString()} \n")
             SwingUtilities.invokeLater {
-                // update Tournament Message Board, Game Message Board and score of winner
-                //guiObject?.updateCurrentGameStatus()
+                // update GUI components here
+                guiObject?.updateGameMenu(user)
             }
         } else {
             println("No Game Status received")

@@ -14,7 +14,7 @@ import com.google.gson.Gson
 class RestApi(){
     fun registerUser() {
 
-        val registerOb = Register("koala","fukuoka24","Lisa","Jaksties")
+        val registerOb = Register("LisaJaksties","fukuoka24","Lisa","Jaksties")
 
         println("hi")
         val client = HttpClient.newHttpClient()
@@ -36,9 +36,9 @@ class RestApi(){
         }
     }
 
-    fun userLogin(): Accesstoken?{
+    fun userLogin(username: String, password:String): Accesstoken?{
         // create Login Object with data and convert to Json with gson
-        val loginOb = Login("koala", "fukuoka24")
+        val loginOb = Login(username, password)
         val gson = Gson()
         val jsonLogRequest = gson.toJson(loginOb)
         val client = HttpClient.newHttpClient()
@@ -101,25 +101,4 @@ class RestApi(){
         return matchResult?.groupValues?.getOrNull(1)
     }
 
-    fun getData(): String? {
-        val accessToken = userLogin()
-        if (accessToken == null) {
-            return null
-        }
-
-        val client = HttpClient.newBuilder()
-
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("https://nope-server.azurewebsites.net/api/data"))
-            .header("Content-Type", "application/json")
-            .header("Authorization", "Bearer $accessToken")
-            .GET()
-            .build()
-
-        //val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-        //if (response.statusCode() == 200) {
-        //    return response.body()
-        //}
-        return null
-    }
 }

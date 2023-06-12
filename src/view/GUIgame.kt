@@ -1,5 +1,6 @@
 package view
 
+import ai_player.Move
 import ai_player.Tournament
 import socket.*
 import java.awt.*
@@ -7,7 +8,7 @@ import javax.swing.*
 import javax.swing.table.DefaultTableModel
 
 
-class GUIMain : JFrame("Nope Card Game") {
+class GUIgame : JFrame("Nope Card Game") {
 
     private val scoreTable = JTable()
     private var tournamentTable = JTable()
@@ -23,13 +24,16 @@ class GUIMain : JFrame("Nope Card Game") {
     private val gamePanel = JPanel()
 
     private var gameHeader = JTextArea()
-    private var gameCard = JButton()
+    private var gameCard = JLabel()
+    private var gameCardPic = JButton()
     private var gamePile = JLabel()
     private var gameMyMove = JTextArea()
     private var gameOpponent = JTextArea()
+    private var spaceButton = JButton()
 
     private var waitingRoomBoard = JTextArea(20,20)
     private val cardLayout = CardLayout()
+
 
     init {
         defaultCloseOperation = EXIT_ON_CLOSE
@@ -49,7 +53,7 @@ class GUIMain : JFrame("Nope Card Game") {
         val titleLabel = JLabel("Nope!™")
 
 
-        val icon = ImageIcon("bin/icon.jpg")
+        val icon = ImageIcon("bin/Nope.png")
         val titleIcon = JLabel()
         titleIcon.icon = icon
         titleIcon.alignmentX = CENTER_ALIGNMENT
@@ -66,8 +70,8 @@ class GUIMain : JFrame("Nope Card Game") {
             val button = JButton(item)
             button.alignmentX = CENTER_ALIGNMENT
             button.maximumSize = Dimension(600, 80)
-            button.setForeground(Color.BLACK)                    // Vordergrundfarbe auf "rot" setzen
-            button.background = Color(154,199,220) // Hintergrundfarbe auf "weiß" setzen
+            button.setForeground(Color.BLACK)
+            button.background = Color(154,199,220)
             button.isBorderPainted = false
 
             if(item == "Create Tournament"){
@@ -122,93 +126,57 @@ class GUIMain : JFrame("Nope Card Game") {
 
     private fun initGamePanel(){
 
-        gamePanel.layout= BorderLayout()
-        gamePanel.maximumSize = Dimension(1200, 1000)
+        gamePanel.layout= BoxLayout(gamePanel, BoxLayout.Y_AXIS)
         val gameBorder = JPanel()
-        gameBorder.layout = GridBagLayout()
+        gameBorder.layout = BorderLayout()
+        val leftRight = JPanel()
+        leftRight.layout = BoxLayout(leftRight, BoxLayout.X_AXIS)
 
+        gameBorder.background = Color(132, 204, 204)
 
-        gameBorder.background = Color(242, 242, 242)
-
-        val gbc = GridBagConstraints()
-        gbc.fill = GridBagConstraints.BOTH
-
-        gbc.gridx = 0
-        gbc.gridy = 0
-        gbc.gridwidth = 5
+        val nopeGameHeader = JLabel("Nope Card Game ")
+        nopeGameHeader.alignmentX = CENTER_ALIGNMENT
+        nopeGameHeader.font = Font("Times New Roman", Font.BOLD, 40)
+        nopeGameHeader.background = Color(132, 204, 204)
+        gamePanel.add(nopeGameHeader)
 
         gameHeader.background = Color(234, 226, 211)
         gameHeader.font = Font("Arial", Font.BOLD, 14)
         gameHeader.text = "Game Menu "
-        gameHeader.maximumSize = Dimension(700, 100)
-        gameBorder.add(gameHeader, gbc)
+        gameHeader.alignmentX = CENTER_ALIGNMENT
 
-        gbc.gridx = 2
-        gbc.gridy = 1
-        gbc.gridwidth = 1
+        gamePanel.add(gameHeader)
 
+        gameCardPic.alignmentX = CENTER_ALIGNMENT
+        gamePanel.add(gameCardPic)
 
         gameCard.font = Font("Arial", Font.BOLD, 25)
-        gameCard.background = Color(242, 242, 242)
-        gameBorder.add(gameCard, gbc)
-        gameCard.maximumSize = Dimension(140, 180)
-
-        gbc.gridx = 2
-        gbc.gridy = 2
-        gbc.gridwidth = 1
+        gameCard.background = Color(234, 226, 211)
+        gamePanel.add(gameCard)
+        gameCard.alignmentX = CENTER_ALIGNMENT
 
         gamePile.font = Font("Arial", Font.BOLD, 25)
-        gamePile.background = Color(242, 242, 242)
-        gameBorder.add(gamePile, gbc)
-        gamePile.maximumSize = Dimension(140, 10)
+        gamePile.background = Color(154,199,220)
         gamePile.text = "size: 44"
-
-        gbc.gridx = 0
-        gbc.gridy = 3
-        gbc.gridwidth = 3
+        gamePanel.add(gamePile)
+        gamePile.alignmentX = CENTER_ALIGNMENT
 
         gameMyMove.font = Font("Arial", Font.BOLD, 25)
-        gameMyMove.background = Color(132, 204, 204)
-        gameBorder.add(gameMyMove, gbc)
-        gameMyMove.maximumSize = Dimension(400, 200)
+        gameMyMove.background = Color(242, 242, 242)
+        leftRight.add(gameMyMove)
 
-        gbc.gridx = 3
-        gbc.gridy = 3
-        gbc.gridwidth = 2
 
         gameOpponent.font = Font("Arial", Font.BOLD, 25)
-        gameOpponent.background = Color(132, 204, 204)
-        gameBorder.add(gameOpponent, gbc)
-        gameOpponent.maximumSize = Dimension(260, 200)
+        gameOpponent.background = Color(242, 242, 242)
+        leftRight.add(gameOpponent)
 
-        updateGameMenu()
-        gamePanel.add(gameBorder,BorderLayout.CENTER)
+
+        updateGameMenu("opponentname")
+        gameBorder.add(leftRight,BorderLayout.CENTER)
+        gameBorder.alignmentX = CENTER_ALIGNMENT
+        gamePanel.add(gameBorder)
     }
 
-    public fun updateGameMenu(){
-        gameHeader.text = ""
-        gameHeader.append("Nope Card Game \n")
-        gameHeader.append("Player1:  ${currentGame.players?.get(0)?.username} \n")
-        gameHeader.append("Player2:  ${currentGame.players?.get(1)?.username} \n")
-        gameHeader.append("Round:  ${currentMatch.round} \n")
-        gameHeader.append(" ${currentMatch.opponents?.get(0)?.score} :  ${currentMatch.opponents?.get(1)?.score}")
-        gameHeader.font = Font("Arial", Font.BOLD, 25)
-
-        gameCard.text = "Card: ${currentGame.topCard?.type} ${currentGame.topCard?.color} ${currentGame.topCard?.value}"
-        gameCard.icon = ImageIcon("bin/icon.jpg")
-
-        gameMyMove.text = ""
-        gameMyMove.append("My Hand: \n")
-        gameMyMove.append("cards: \n")
-
-        for(i in 0 until (currentGame.hand?.size?:0)){
-
-            gameMyMove.append("Card ${i+1}: ${currentGame.hand?.get(i)?.getType()?:""}  ${currentGame.hand?.get(i)?.getColor()?:""}  ${currentGame.hand?.get(i)?.value?:""}  ${currentGame.hand?.get(i)?.selectValue?:""}  ${currentGame.hand?.get(i)?.selectedColor?:""}\n")
-        }
-
-        gameOpponent.text = ""
-        gameOpponent.append("Number of Cards on Hand: ${currentGame.players?.get(1)?.handcards} \n")
-    }
 
     private fun initWaitingRoomPanel(){
         waitingRoomPanel.layout = BorderLayout()
@@ -216,20 +184,20 @@ class GUIMain : JFrame("Nope Card Game") {
         // divide main Panel into two by adding a new panel
         val tempPanel = JPanel()
         tempPanel.layout = BorderLayout()
-        tempPanel.background = Color(198, 226, 255)
+        tempPanel.background = Color(154,199,220)
 
 
         val leaveTournament = JButton("Leave Tournament")
         leaveTournament.font = Font("Arial", Font.BOLD, 14)
         leaveTournament.preferredSize = Dimension(150, 40)
-        leaveTournament.background = Color(190,190,190)
+        leaveTournament.background = Color(234, 226, 211)
         leaveTournament.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
         leaveTournament.isBorderPainted = true
         leaveTournament.addActionListener {
             if (inTournament) {
                 val tournamentInfoStatus = leaveTournament()
                 if(tournamentInfoStatus.success){
-                    showMessage(this, "You left the tournament", 2000)
+                    infoBoard(this, "You left the tournament", 2000)
                     inTournament = false
                     tournamentCreator = false
                     // reset current tournament to nothing
@@ -242,11 +210,11 @@ class GUIMain : JFrame("Nope Card Game") {
 
                     cardLayout.show(contentPane, "tournamentLobby")
                 }else{
-                    showMessage(this, tournamentInfoStatus.error.toString(),2000)
+                    infoBoard(this, tournamentInfoStatus.error.toString(),2000)
                 }
 
             } else {
-                showMessage(this, "You cannot leave a tournament as you ar not in one", 2000)
+                infoBoard(this, "You cannot leave a tournament as you ar not in one", 2000)
             }
 
         }
@@ -254,26 +222,26 @@ class GUIMain : JFrame("Nope Card Game") {
         val startTournament = JButton("Start Tournament")
         startTournament.font = Font("Arial", Font.BOLD, 14)
         startTournament.preferredSize = Dimension(150, 40)
-        startTournament.background = Color(190,190,190)
+        startTournament.background = Color(234, 226, 211)
         startTournament.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
         startTournament.isBorderPainted = true
         startTournament.addActionListener {
             if (tournamentCreator) {
                 val tournamentInfoStatus = startTournament()
                 if(tournamentInfoStatus.success){
-                    showMessage(this, "The Tournament starts now -> go to game room", 2000)
+                    infoBoard(this, "The Tournament starts now -> go to game room", 2000)
                     cardLayout.show(contentPane, "game")
                 }else{
-                    showMessage(this,tournamentInfoStatus.error.toString(),2000)
+                    infoBoard(this,tournamentInfoStatus.error.toString(),2000)
                 }
             } else {
-                showMessage(this, "Sorry but only the admin can start a game", 2000)
+                infoBoard(this, "Sorry but only the admin can start a game", 2000)
             }
         }
 
         val messageBoard = JScrollPane(waitingRoomBoard)
         waitingRoomPanel.add(messageBoard, BorderLayout.CENTER)
-        waitingRoomBoard.append("Here is the info then...")
+
         tempPanel.add(leaveTournament, BorderLayout.WEST)
         tempPanel.add(startTournament, BorderLayout.EAST)
         waitingRoomPanel.add(tempPanel, BorderLayout.SOUTH)
@@ -300,7 +268,7 @@ class GUIMain : JFrame("Nope Card Game") {
         tournamentTable.rowSelectionAllowed = true
         tournamentTable.columnSelectionAllowed = false
         tournamentTable.font = Font("Arial", Font.ITALIC, 16)
-        tournamentTable.gridColor = Color(190,190,190)
+        tournamentTable.gridColor = Color(234, 226, 211)
 
 
 
@@ -312,7 +280,7 @@ class GUIMain : JFrame("Nope Card Game") {
         val joinTournament = JButton("Join Tournament")
         joinTournament.font = Font("Arial", Font.BOLD, 14)
         joinTournament.preferredSize = Dimension(150, 40)
-        joinTournament.background = Color(190,190,190)
+        joinTournament.background = Color(234, 226, 211)
         joinTournament.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
         joinTournament.isBorderPainted = true
         joinTournament.addActionListener {
@@ -325,20 +293,20 @@ class GUIMain : JFrame("Nope Card Game") {
                 val tournamentInfoStatus = joinTournament(tournamentId!!)
                 if(tournamentInfoStatus.success){
                     inTournament = true
-                    showMessage(this, "You joined game number: $tournamentId ", 4000)
+                    infoBoard(this, "You joined game number: $tournamentId ", 4000)
                     //updateTournamentList()
 
                     currentTournament.status = tournamentList[selectedRowIndex].status
                     currentTournament.createdAt =tournamentList[selectedRowIndex].createdAt
-                    updateCurrentTournamentList()
+                    updateWaitingRoom()
                     cardLayout.show(contentPane, "game lobby")
                 }
                 else{
-                    showMessage(this, tournamentInfoStatus.error.toString(), 2000)
+                    infoBoard(this, tournamentInfoStatus.error.toString(), 2000)
                 }
 
             } else {
-                showMessage(this, "Please choose the tournament you want to join", 2000)
+                infoBoard(this, "Please choose the tournament you want to join", 2000)
             }
         }
 
@@ -359,7 +327,7 @@ class GUIMain : JFrame("Nope Card Game") {
         createButton.isEnabled = false
         createButton.font = Font("Arial", Font.BOLD, 14)
         createButton.preferredSize = Dimension(150, 40)
-        createButton.background = Color(190,190,190)
+        createButton.background = Color(234, 226, 211)
         createButton.border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
         createButton.isBorderPainted = true
 
@@ -408,7 +376,7 @@ class GUIMain : JFrame("Nope Card Game") {
                 val tournamentInfoStatus = createTournament(number)
                 if(tournamentInfoStatus.success && tournamentInfoStatus.tournamentId != null){
 
-                    showMessage(this,"Tournament created with ID: ${tournamentInfoStatus.tournamentId}, current size: ${tournamentInfoStatus.currentSize}, best of: ${tournamentInfoStatus.bestOf}",4000)
+                    infoBoard(this,"Tournament created with ID: ${tournamentInfoStatus.tournamentId}, current size: ${tournamentInfoStatus.currentSize}, best of: ${tournamentInfoStatus.bestOf}",4000)
                     inTournament = true
                     tournamentCreator = true
                     //updateTournamentList()
@@ -416,50 +384,30 @@ class GUIMain : JFrame("Nope Card Game") {
                     currentTournament.currentSize = tournamentInfoStatus.currentSize
                     currentTournament.bestOf = tournamentInfoStatus.bestOf
 
-                    updateCurrentTournamentList()
+                    updateWaitingRoom()
                     cardLayout.show(contentPane, "game lobby")
                     tfName.text = "" // clear textfield
                 } else{
-                    showMessage(this,tournamentInfoStatus.error.toString(),4000)
+                    infoBoard(this,tournamentInfoStatus.error.toString(),4000)
                 }
 
             } else {
-                showMessage(this, "Please enter a valid integer value between 3 and 7.",2000)
+                infoBoard(this, "Please enter a valid integer value between 3 and 7.",2000)
 
 
             }
         }
         centerPanel.add(label)
         centerPanel.add(tfName)
-//        crTournamentPanel.add(label, BorderLayout.LINE_START)
-//        crTournamentPanel.add(tfName, BorderLayout.CENTER)
 
         createTournPanel.add(createButton, BorderLayout.SOUTH)
         createTournPanel.add(returnButton2, BorderLayout.NORTH)
         createTournPanel.add(centerPanel, BorderLayout.CENTER)
     }
-    /*    private fun updateScoreTable() {
-            val jsonString = """
-                [
-                    {"name": "John", "score": 100},
-                    {"name": "Mary", "score": 90},
-                    {"name": "Bob", "score": 80},
-                    {"name": "Alice", "score": 70},
-                    {"name": "David", "score": 60}
-                ]
-            """.trimIndent()
 
-            val gson = Gson()
-            val typeToken = object : TypeToken<List<Score>>() {}.type
-            val scores = gson.fromJson<List<Score>>(jsonString, typeToken)
+    fun updateTournamentLobby(){
 
-            scores.sortedByDescending { it.score }
-                .forEach { score ->
-                    val model = scoreTable.model as DefaultTableModel
-                    model.addRow(arrayOf(score.name, score.score))
-                }
-        }*/
-    private fun updateTournament(){
+        tournamentTable.model= DefaultTableModel(arrayOf("Number", "ID", "Current Size", "Date", "status", "Players"), 0 )
         val model = tournamentTable.model as DefaultTableModel
         val tempTournamentList = mutableListOf<Tournament>()
         tempTournamentList.addAll(tournamentList.map { it.copy() })
@@ -480,45 +428,106 @@ class GUIMain : JFrame("Nope Card Game") {
         model.fireTableDataChanged()
         model.fireTableRowsInserted(0, tournamentList.size)
 
+        // set not selectable if already joined a tournament
+        tournamentTable.isEnabled = !inTournament
     }
-    fun updateTournamentList(){
 
-        tournamentTable.model= DefaultTableModel(arrayOf("Number", "ID", "Current Size", "Date", "status", "Players"), 0 )
-        updateTournament()
-        if(inTournament == true){
-            tournamentTable.setEnabled(false)
-        }else{
-            tournamentTable.isEnabled = true
-        }
-    }
-    private fun updateCurrentTournament(){
-        if (currentTournament.id != null){
-            if(currentTournament.message!=null){
-                showMessage(this,currentTournament.message.toString(),2000)
+    fun updateWaitingRoom(){
+        infoBoard(this, currentTournament.message.toString(), 2000)
+
+        waitingRoomBoard.font = Font("Arial", Font.PLAIN, 50)
+        waitingRoomBoard
+        waitingRoomBoard.text = ""
+        waitingRoomBoard.append("Tournament ID : ${currentTournament.id} \n")
+        waitingRoomBoard.append("Current Tournament Size: ${currentTournament.currentSize} \n")
+        waitingRoomBoard.append("Date: ${currentTournament.createdAt.toString()} \n")
+        waitingRoomBoard.append("Status: ${currentTournament.status} \n")
+        for(j in 0 until (currentTournament.players?.size ?: 0)){
+            val player = currentTournament.players?.get(j)
+            if (player != null) {
+                waitingRoomBoard.append("Player: ${player.username} score: ${player.score} \n")
             }
-            var players = ""
-            if(currentTournament.players != null){
-                for(j in 0 until currentTournament.players!!.size){
-                    val currP = currentTournament.players!![j]
-                    players  += " ${currP.username} "
+        }
+        waitingRoomBoard.append("Rounds to play (Best of): ${currentTournament.bestOf} \n")
+        waitingRoomBoard.append("Status message: ${currentTournament.message} \n")
+        waitingRoomBoard.append("Host: ${currentTournament.host?.username}\n")
+        waitingRoomBoard.append("Winner: ${currentTournament.winner?.username}")
+
+        //switch between game lobby and game main window
+        if(currentTournament.status == "IN_PROGRESS"){
+            cardLayout.show(contentPane, "game")
+        }else if(currentTournament.status == "FINISHED"){
+            cardLayout.show(contentPane, "game lobby")
+        }
+
+    }
+
+    public fun updateGameMenu(user: String){
+
+        gameHeader.text = ""
+        gameHeader.append("Player1:  ${currentGame.players?.get(0)?.username} \n")
+        gameHeader.append("Player2:  ${currentGame.players?.get(1)?.username} \n")
+        gameHeader.append("Round:  ${currentMatch.round} \n")
+        gameHeader.append(" ${currentMatch.opponents?.get(0)?.score} :  ${currentMatch.opponents?.get(1)?.score}")
+        gameHeader.font = Font("Arial", Font.BOLD, 25)
+
+        gameCardPic.background = Color(234, 226, 211)
+        gameCard.text = "Card: ${currentGame.topCard?.type?:""} ${currentGame.topCard?.color?:""} ${currentGame.topCard?.value?:""}"
+        // change card icon - color
+        if (currentGame.topCard?.color == ai_player.Color.RED) {
+            gameCardPic.icon = ImageIcon("bin/card_red.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.GREEN) {
+            gameCardPic.icon = ImageIcon("bin/card_green.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.YELLOW) {
+            gameCardPic.icon = ImageIcon("bin/card_yellow.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.BLUE) {
+            gameCardPic.icon = ImageIcon("bin/card_blue.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.RED_GREEN) {
+            gameCardPic.icon = ImageIcon("bin/card_red_green.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.RED_BLUE) {
+            gameCardPic.icon = ImageIcon("bin/card_blue_red.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.RED_YELLOW) {
+            gameCardPic.icon = ImageIcon("bin/card_yellow_red.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.BLUE_GREEN) {
+            gameCardPic.icon = ImageIcon("bin/card_blue_green.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.YELLOW_BLUE) {
+            gameCardPic.icon = ImageIcon("bin/card_yellow_blue.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.YELLOW_GREEN) {
+            gameCardPic.icon = ImageIcon("bin/card_yellow_green.png")
+        } else if (currentGame.topCard?.color == ai_player.Color.MULTI) {
+            gameCardPic.icon = ImageIcon("bin/card_multi.png")
+        } else {
+            gameCardPic.icon = ImageIcon("bin/card_empty.png")
+        }
+
+        gameMyMove.text = ""
+        gameMyMove.append("My AI Player: \n")
+        gameMyMove.append("cards: \n")
+
+        for(i in 0 until (currentGame.hand?.size?:0)){
+
+            gameMyMove.append("Card ${i+1}: ${currentGame.hand?.get(i)?.getType()?:""}  ${currentGame.hand?.get(i)?.getColor()?:""}  ${currentGame.hand?.get(i)?.value?:""}  ${currentGame.hand?.get(i)?.selectValue?:""}  ${currentGame.hand?.get(i)?.selectedColor?:""}\n")
+        }
+
+        gameOpponent.text = ""
+        gameOpponent.append("Opponent: \n")
+
+        var handcardOpponent = 0
+        if(currentGame.players != null){
+            for(p in currentGame.players!!){
+                if(p.username != user){
+                    handcardOpponent = p.handcards!!
                 }
             }
-            if(currentTournament.winner != null){
-                //TODO make prettier
-            }
-            if(currentTournament.host != null){
-                //TODO make prettier
-            }
-            val model = currentTournamentTable.model as DefaultTableModel
-            model.addRow(arrayOf( currentTournament.id, currentTournament.currentSize, currentTournament.createdAt, currentTournament.status, players, currentTournament.bestOf, currentTournament.message,currentTournament.host,currentTournament.winner))
         }
+
+        gameOpponent.append("Number of Cards on Hand: ${handcardOpponent} \n")
     }
-    fun updateCurrentTournamentList(){
 
-        currentTournamentTable.model= DefaultTableModel(arrayOf("ID", "Current Size", "Date", "status", "Players", "Best Of", "Last Message","Host", "Winner"), 0 )
-        updateCurrentTournament()
+    public fun updateMyMove(myMove: Move){
 
-
+        val myMoveString= "My current Move: Move Type: ${myMove.type}, 1. Card: ${myMove.card1?.type} ${myMove.card1?.color} ${myMove.card1?.value}, 2. Card:  ${myMove.card2?.type} ${myMove.card2?.color} ${myMove.card2?.value}, 3. Card:  ${myMove.card3?.type} ${myMove.card3?.color} ${myMove.card3?.value}"
+        infoBoard(this, myMoveString, 6000)
     }
 
 }
