@@ -15,7 +15,7 @@ class AILogic {
         println()
         println("TopCard: ${turnData.topCard}")
 
-        // indicate the possible handcards to put on topcard
+        // indicate the possible hand cards to put on top card
         val matchingHandCards = findMatchingCards(turnData.hand!!, turnData.topCard!!, turnData.lastTopCard)
 
         //1. Nope, 2. Take, 3. Put
@@ -74,7 +74,6 @@ class AILogic {
                 // case 1 same color card              case 2  hand card consisting of two colors  case 3 top card consisting of two colors   case 4 hand card is multi card    case 5: both two colored values -> check for similarity and compare it with last card
                 if (inputColor == currentCardColor || inputColor in currentCardColor || currentCardColor in inputColor || currentCardColor == Color.MULTI.color || checkDoubleValuesForeEquality(
                         card,
-                        lastCard,
                         lastCard
                     ).color in lastCard.color.color
                 ) {
@@ -146,13 +145,13 @@ class AILogic {
             }
 
 
-            // print possible list of combinations that can be send
+            // print possible list of combinations that can be sent
             for (i in 0 until matchingCardCollocations.size) {
                 println("$i : ${matchingCardCollocations[i].size} : ${matchingCardCollocations[i]}")
             }
 
         } else {
-            // Joker as topcard or  Reboot as topcard
+            // Joker as top card or  Reboot as top card
             if (lastCard.type == Type.JOKER || lastCard.type == Type.REBOOT) {
                 for (card in handCards) {
                     val tempCards = ArrayList<Card>()
@@ -160,27 +159,27 @@ class AILogic {
                     matchingCardCollocations.add(tempCards)
                 }
             }
-            // SeeThrough as topcard
+            // SeeThrough as top card
             if (lastCard.type == Type.SEE_THROUGH) {
-                if (preLastCard != null) {
-                    matchingCardCollocations = findMatchingCards(handCards, preLastCard, null)
+                matchingCardCollocations = if (preLastCard != null) {
+                    findMatchingCards(handCards, preLastCard, null)
                 } else {
                     val cardST = Card(Type.NUMBER, lastCard.color, 1, null, null, null)
-                    matchingCardCollocations = findMatchingCards(handCards, cardST, null)
+                    findMatchingCards(handCards, cardST, null)
 
                 }
             }
-            // Selection as topcard
+            // Selection as top card
             if (lastCard.type == Type.SELECTION) {
 
                 //one color
-                if (lastCard.color != Color.MULTI) {
+                matchingCardCollocations = if (lastCard.color != Color.MULTI) {
                     val cardS = Card(Type.NUMBER, lastCard.color, lastCard.selectValue!!, null, null, null)
-                    matchingCardCollocations = findMatchingCards(handCards, cardS, preLastCard)
+                    findMatchingCards(handCards, cardS, preLastCard)
                     //multicolor
                 } else {
                     val cardS = Card(Type.NUMBER, lastCard.selectedColor!!, lastCard.selectValue!!, null, null, null)
-                    matchingCardCollocations = findMatchingCards(handCards, cardS, preLastCard)
+                    findMatchingCards(handCards, cardS, preLastCard)
                 }
             }
         }
@@ -193,8 +192,7 @@ class AILogic {
         var isSameColor = false
         if (card.color.color == card2.color.color || card.color.color in card2.color.color || card2.color.color in card.color.color || card2.color.color == Color.MULTI.color || card.color.color == Color.MULTI.color || checkDoubleValuesForeEquality(
                 card,
-                card2,
-                lastCard
+                card2
             ).color in lastCard.color.color
         ) {
             isSameColor = true
@@ -208,22 +206,19 @@ class AILogic {
         // check equality of card 1 and 2
         if (card.color.color == card2.color.color || card.color.color in card2.color.color || card2.color.color in card.color.color || card2.color.color == Color.MULTI.color || card.color.color == Color.MULTI.color || checkDoubleValuesForeEquality(
                 card,
-                card2,
-                lastCard
+                card2
             ).color in lastCard.color.color
         ) {
             // check equality of card 2 and 3
             if (card2.color.color == card3.color.color || card2.color.color in card3.color.color || card3.color.color in card2.color.color || card3.color.color == Color.MULTI.color || card2.color.color == Color.MULTI.color || checkDoubleValuesForeEquality(
                     card2,
-                    card3,
-                    lastCard
+                    card3
                 ).color in lastCard.color.color
             ) {
                 // check equality of card 1 and 3
                 if (card.color.color == card3.color.color || card.color.color in card3.color.color || card3.color.color in card.color.color || card.color.color == Color.MULTI.color || card3.color.color == Color.MULTI.color || checkDoubleValuesForeEquality(
                         card,
-                        card3,
-                        lastCard
+                        card3
                     ).color in lastCard.color.color
                 ) {
                     isSameColor = true
@@ -233,7 +228,7 @@ class AILogic {
         return isSameColor
     }
 
-    private fun checkDoubleValuesForeEquality(card: Card, card2: Card, lastCard: Card): Color {
+    private fun checkDoubleValuesForeEquality(card: Card, card2: Card): Color {
         var matchingColor = Color.NULL
         // check for two-type colors
         val twoTypeColors = setOf(
@@ -256,7 +251,7 @@ class AILogic {
 
     private fun aiDecision(
         fittingCardInDeck: ArrayList<ArrayList<Card>>,
-        turndata: GameState,
+        turnData: GameState,
         user: String
     ): ArrayList<Card> {
         var bestMoveCards = ArrayList<Card>()
@@ -330,8 +325,8 @@ class AILogic {
                 //sort in order 1,2,3
                 bestMoveCards.sortBy { it.value }
 
-                //look for opponents handsize
-                for (p in turndata.players!!) {
+                //look for opponents hand size
+                for (p in turnData.players!!) {
                     if (p.username != (user)) {
                         opponent.handcards = p.handcards
                     }
@@ -353,7 +348,7 @@ class AILogic {
         var countYellow = 0
         var countBlue = 0
         var countGreen = 0
-        for (card in turndata.hand!!) {
+        for (card in turnData.hand!!) {
             when (card.color) {
                 Color.RED -> {
                     countRed++
@@ -404,8 +399,8 @@ class AILogic {
     /**
      * sorting the cards : lowest value on top
      */
-    fun lowValueOnTop(cardsToSort: ArrayList<Card>): ArrayList<Card> {
-        var sortedCards = ArrayList<Card>()
+    private fun lowValueOnTop(cardsToSort: ArrayList<Card>): ArrayList<Card> {
+        val sortedCards = ArrayList<Card>()
         for (i in cardsToSort.size - 1 downTo 0) {
             sortedCards.add(cardsToSort[i])
         }
@@ -415,8 +410,8 @@ class AILogic {
     /**
      * sorting the cards: middle value on top if 3 cards
      */
-    fun middleValueOnTop(cardsToSort: ArrayList<Card>): ArrayList<Card> {
-        var sortedCards = ArrayList<Card>()
+    private fun middleValueOnTop(cardsToSort: ArrayList<Card>): ArrayList<Card> {
+        val sortedCards = ArrayList<Card>()
 
         sortedCards.add(cardsToSort[2])
         sortedCards.add(cardsToSort[0])
@@ -428,7 +423,7 @@ class AILogic {
     /**
      * sorting the cards after color
      */
-    fun sortByColor(cardsToSort: ArrayList<Card>, color: Color): ArrayList<Card> {
+    private fun sortByColor(cardsToSort: ArrayList<Card>, color: Color): ArrayList<Card> {
         var sortedCards = ArrayList<Card>()
         for (i in cardsToSort.size - 1 downTo 0) {
             if (cardsToSort[i].color == color) {

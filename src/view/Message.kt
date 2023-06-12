@@ -12,21 +12,15 @@ fun infoBoard(fr: JFrame, content: String, time: Int) {
 
     val x = fr.locationOnScreen.x + fr.width / 2 - infoMessage.width / 2
     val y = fr.locationOnScreen.y + fr.height / 8 - infoMessage.height / 2
-    infoMessage.setLocation(x,y)
+    infoMessage.setLocation(x, y)
     infoMessage.isUndecorated = true
 
     val panel = JPanel()
     panel.layout = BorderLayout()
-    panel.background = Color(154,199,220)
-
-    val iconImage = ImageIcon("bin/info2.png").image
-    val scaledIcon = ImageIcon(iconImage.getScaledInstance(32, 32, Image.SCALE_SMOOTH))
-    val iconLabel = JLabel(scaledIcon)
-    iconLabel.border = BorderFactory.createEmptyBorder(0, 10, 0, 10)
-    panel.add(iconLabel, BorderLayout.WEST)
+    panel.background = Color(154, 199, 220)
 
     val message = JLabel(content)
-    message.font= Font("Arial", Font.BOLD, 16)
+    message.font = Font("Arial", Font.BOLD, 16)
     message.horizontalAlignment = SwingConstants.CENTER
     message.verticalAlignment = SwingConstants.CENTER
     message.border = BorderFactory.createEmptyBorder(0, 10, 0, 10)

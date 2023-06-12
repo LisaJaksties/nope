@@ -11,10 +11,10 @@ import com.google.gson.Gson
  * Klassen mit Infos für die Json Objekte
  */
 
-class RestApi(){
-    fun registerUser() {
+class RestApi() {
+    fun registerUser(username: String, password: String, firstname: String, lastname: String): Boolean {
 
-        val registerOb = Register("LisaJaksties","fukuoka24","Lisa","Jaksties")
+        val registerOb = Register(username, password, firstname, lastname)
 
         println("hi")
         val client = HttpClient.newHttpClient()
@@ -31,12 +31,15 @@ class RestApi(){
         val postResponse = client.send(request, BodyHandlers.ofString())
         println("Response - POST register")
         println(postResponse.body())
+        var success = false
         if (postResponse.statusCode() == 200) {
-            print("lauft alles super")
+            print("status Code : 200")
+            success = true
         }
+        return success
     }
 
-    fun userLogin(username: String, password:String): Accesstoken?{
+    fun userLogin(username: String, password: String): Accesstoken? {
         // create Login Object with data and convert to Json with gson
         val loginOb = Login(username, password)
         val gson = Gson()
@@ -67,7 +70,7 @@ class RestApi(){
 
     }
 
-    fun connect(access_token: Accesstoken){
+    fun connect(access_token: Accesstoken) {
         // create Login Object with data and convert to Json with gson
         val token = Token(access_token.accessToken.toString())
         val gson = Gson()
@@ -85,10 +88,10 @@ class RestApi(){
         // store the access token if Login was valid and return accessToken
         val authenticationResponse = client.send(request, BodyHandlers.ofString())
         if (authenticationResponse.statusCode() == 200) {
-            val responseBody = authenticationResponse.body()
+            authenticationResponse.body()
             println("Authentication response: ")
             println(authenticationResponse.body())
-         }
+        }
 
     }
 
